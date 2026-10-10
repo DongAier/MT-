@@ -1,0 +1,646 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <!-- 核心：禁止非预期缩放，适配全面屏/刘海屏安全区 -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <title>赛道级 制动液压比科学匹配与测算工具</title>
+  <style>
+    :root {
+      --bg-color: #0b0d11;
+      --card-bg: rgba(18, 22, 31, 0.94);
+      --card-border: #222938;
+      
+      /* 上泵专属色系（科技青蓝） */
+      --mc-accent: #00e5ff;
+      --mc-border: rgba(0, 229, 255, 0.35);
+      --mc-glow: rgba(0, 229, 255, 0.12);
+      
+      /* 下泵专属色系（赛车烈焰橙红） */
+      --caliper-accent: #ff4d00;
+      --caliper-border: rgba(255, 77, 0, 0.35);
+      --caliper-glow: rgba(255, 77, 0, 0.12);
+      
+      /* 状态与文本 */
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-sub: #64748b;
+      --input-bg: #10141d;
+      --tag-good: #00e676;
+      --tag-warn: #ffab00;
+      --tag-danger: #ff1744;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* 核心修复：防止系统字号缩放策略破坏页面布局 */
+    html {
+      -webkit-text-size-adjust: 100%;
+      text-size-adjust: 100%;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 25%),
+        radial-gradient(circle at 90% 80%, rgba(255, 77, 0, 0.05) 0%, transparent 25%),
+        repeating-linear-gradient(45deg, #0e1117 0, #0e1117 1px, transparent 0, transparent 24px);
+      background-size: 100% 100%, 100% 100%, 28px 28px;
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 16px 12px;
+      /* 适配 iPhone/安卓底部虚拟按键与小黑条安全区 */
+      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+      min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    header {
+      text-align: center;
+      padding: 4px 0 8px;
+    }
+    header h1 {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #00e5ff, #fff, #ff4d00);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    header p {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      position: relative;
+      width: 100%;
+    }
+
+    /* 上泵区块 */
+    .card-mc {
+      border-color: var(--mc-border);
+      box-shadow: 0 4px 20px -2px var(--mc-glow);
+    }
+    .card-mc .card-title {
+      color: var(--mc-accent);
+      border-left: 3px solid var(--mc-accent);
+      padding-left: 8px;
+    }
+
+    /* 下泵区块 */
+    .card-caliper {
+      border-color: var(--caliper-border);
+      box-shadow: 0 4px 20px -2px var(--caliper-glow);
+    }
+    .card-caliper .card-title {
+      color: var(--caliper-accent);
+      border-left: 3px solid var(--caliper-accent);
+      padding-left: 8px;
+    }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+    .form-group:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    /* 移动端核心关键：input与select在移动设备上设置16px，杜绝聚焦自动缩放放大页面 */
+    select, input {
+      width: 100%;
+      background-color: var(--input-bg);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 16px;
+      outline: none;
+      transition: border-color 0.2s ease;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    /* 下拉选择框右侧小箭头图标 */
+    select {
+      background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+    }
+
+    .card-mc select:focus, .card-mc input:focus {
+      border-color: var(--mc-accent);
+    }
+    .card-caliper select:focus, .card-caliper input:focus {
+      border-color: var(--caliper-accent);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      width: 100%;
+    }
+    .input-row input {
+      flex: 1;
+      min-width: 0;
+    }
+    .unit-text {
+      color: var(--text-sub);
+      font-size: 12px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .sub-calc-text {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 6px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 4px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* 评估结果区块 */
+    .result-card {
+      background: linear-gradient(135deg, #131722 0%, #0d0f15 100%);
+      border: 1px solid #2d3748;
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .metric-box {
+      background: #0f121a;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      min-width: 0;
+    }
+
+    .metric-name {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .metric-val {
+      font-size: 20px;
+      font-weight: 800;
+      color: #00e5ff;
+      margin: 4px 0;
+      word-break: break-all;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fff;
+      white-space: nowrap;
+    }
+
+    /* 指导说明 */
+    .guide-card {
+      background-color: #10131a;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .guide-section {
+      margin-bottom: 12px;
+    }
+    .guide-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .guide-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 3px;
+    }
+
+    .guide-code {
+      font-family: monospace;
+      background: #1c2230;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #e2e8f0;
+      font-size: 11px;
+    }
+
+    .pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 5px;
+    }
+    .pill {
+      font-size: 11px;
+      background: #171c26;
+      color: #cbd5e1;
+      padding: 2px 7px;
+      border-radius: 4px;
+      border: 1px solid #283347;
+    }
+
+    /* 移动端专属响应式优化断点 */
+    @media (max-width: 480px) {
+      body {
+        padding: 10px 8px;
+      }
+      .card {
+        padding: 12px;
+      }
+      header h1 {
+        font-size: 18px;
+      }
+      .metrics-grid {
+        grid-template-columns: 1fr; /* 小屏切换为单列堆叠，防止数字文字被挤爆 */
+      }
+      .metric-val {
+        font-size: 22px;
+      }
+      .sub-calc-text {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>制动液压比竞技匹配工具</h1>
+    <p>科学换算杠杆比率 · 预知刹车手感与行程</p>
+  </header>
+
+  <!-- 1. 上泵设置 (青蓝色调) -->
+  <div class="card card-mc">
+    <div class="card-title">
+      <span>1. 上泵主缸设置 (Master Cylinder)</span>
+    </div>
+
+    <div class="form-group">
+      <label>选择常见品牌型号（自选放首行）</label>
+      <select id="mcSelect" onchange="onMcSelectChange()">
+        <option value="custom" selected>-- [自选] 手动输入活塞直径 --</option>
+        
+        <optgroup label="改装直推大厂 (图1收录品牌)">
+          <option value="14">伟凡 / SMRT / FJN / 明浙 直推 (14mm)</option>
+          <option value="15">伟凡 / SMRT / PT / UGR 直推 (15mm)</option>
+          <option value="16">风速 / PT / 明浙 直推 (16mm)</option>
+          <option value="17.5">瑞祖玛 / 明浙 / 盖尔斯彼得 直推 (17.5mm)</option>
+          <option value="19">风速 / UGR / 瑞祖玛 大直推 (19mm)</option>
+        </optgroup>
+
+        <optgroup label="车力屋 Frando">
+          <option value="14">车力屋 7NB / 9NB 直推 (14mm)</option>
+          <option value="15">车力屋 7NB / 9NB 直推 (15mm)</option>
+          <option value="17">车力屋 7NB / 9NB 直推 (17mm)</option>
+          <option value="19">车力屋 7NB / 9NB 直推 (19mm)</option>
+          <option value="12.7">车力屋 F101 侧推 (12.7mm - 1/2")</option>
+        </optgroup>
+
+        <optgroup label="布雷博 Brembo">
+          <option value="14">Brembo 14 RCS 直推 (14mm)</option>
+          <option value="15">Brembo 15 RCS / Corsa Corta (15mm)</option>
+          <option value="16">Brembo 16 RCS 直推 (16mm)</option>
+          <option value="17">Brembo 17 RCS 直推 (17mm)</option>
+          <option value="19">Brembo 19 RCS / RCS CC (19mm)</option>
+          <option value="11">Brembo PS11 侧推 (11mm)</option>
+          <option value="13">Brembo PS13 侧推 (13mm)</option>
+        </optgroup>
+
+        <optgroup label="原厂踏板 / 常用侧推 (图1收录)">
+          <option value="11">九号 E300P / 弯道情人 原厂侧推 (11mm)</option>
+          <option value="12.7">日清 / 常见原厂大侧推 (12.7mm - 1/2")</option>
+          <option value="14">日系街车原厂侧推 (14mm - 9/16")</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>上泵活塞直径 (D₁)</label>
+      <div class="input-row">
+        <input type="number" id="mcDiameter" value="15" step="0.1" inputmode="decimal" oninput="calculate()">
+        <span class="unit-text">mm</span>
+      </div>
+      <div class="sub-calc-text">
+        <span>上泵活塞截面积 (S₁):</span>
+        <strong id="mcAreaDisplay" style="color: var(--mc-accent);">-- mm²</strong>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 下泵设置 (烈焰橙调) -->
+  <div class="card card-caliper">
+    <div class="card-title">
+      <span>2. 卡钳下泵设置 (Caliper)</span>
+    </div>
+
+    <div class="form-group">
+      <label>选择常见卡钳型号（自选放首行）</label>
+      <select id="caliperSelect" onchange="onCaliperSelectChange()">
+        <option value="custom" selected>-- [自选] 手动输入卡钳活塞参数 --</option>
+        
+        <optgroup label="图2收录热销竞技卡钳 (单碟/踏板常用)">
+          <option value="single-32-32">瑞祖玛 M313 / M303 大辐射 (4×32mm)</option>
+          <option value="single-tx1">SMRT TX1 竞技大辐射 (4×32mm)</option>
+          <option value="single-m22">明浙 M22 赛道版大辐射 (4×32mm)</option>
+          <option value="single-ugr">UGR 赛道大辐射 (4×32mm)</option>
+          <option value="single-juan">西互 J.JUAN 辐射对四 (4×30mm)</option>
+          <option value="single-fr6">车力屋 FR6 异径大辐射 (2×30mm + 2×34mm)</option>
+          <option value="single-fcc100">车力屋 FCC100 CNC辐射 (4×30mm)</option>
+          <option value="single-fcf100s">车力屋 FCF100S 锻造辐射 (4×32mm)</option>
+          <option value="single-m50">布雷博 M50 / Stylema (4×30mm)</option>
+          <option value="single-waterbird">布雷博 水鸟原厂对四 (4×32mm)</option>
+          <option value="single-gp4">布雷博 GP4-RX / GP4-MS 赛道对四 (4×32mm)</option>
+        </optgroup>
+
+        <optgroup label="前双碟大排量车款 (双卡钳)">
+          <option value="dual-30-30">双碟对四 30mm/30mm (如 双M50 / 双FCC100)</option>
+          <option value="dual-32-32">双碟对四 32mm/32mm (如 双水鸟 / 双GP4 / 双M313)</option>
+          <option value="dual-30-34">双碟对四 30mm/34mm (如 双FR6 / 双GP4-RB)</option>
+        </optgroup>
+
+        <optgroup label="后卡钳 / 常见原厂单向卡钳">
+          <option value="single-rear-34">大/小螃蟹对二卡钳 (2×34mm)</option>
+          <option value="single-pin-27">原厂浮动单活塞 27mm</option>
+          <option value="single-pin-34">原厂浮动单活塞 34mm</option>
+          <option value="single-pin-2x25">原厂浮动双活塞 (2×25mm)</option>
+        </optgroup>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>卡钳总数量 (碟盘数量)</label>
+      <select id="caliperCount" onchange="calculate()">
+        <option value="1" selected>单卡钳 (单碟)</option>
+        <option value="2">双卡钳 (双碟)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>卡钳结构形式</label>
+      <select id="caliperStructure" onchange="calculate()">
+        <option value="opposed" selected>对向活塞卡钳 (取单侧受力活塞面积)</option>
+        <option value="floating">单向浮动卡钳 (所有活塞均直接推片)</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>活塞组 1：数量 × 直径 (mm)</label>
+      <div class="input-row">
+        <input type="number" id="p1Count" value="4" min="0" inputmode="numeric" oninput="calculate()" style="max-width: 80px;">
+        <span class="unit-text">个 ×</span>
+        <input type="number" id="p1Dia" value="32" step="0.5" inputmode="decimal" oninput="calculate()">
+        <span class="unit-text">mm</span>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>活塞组 2 (异径卡钳填此项，等径填 0)</label>
+      <div class="input-row">
+        <input type="number" id="p2Count" value="0" min="0" inputmode="numeric" oninput="calculate()" style="max-width: 80px;">
+        <span class="unit-text">个 ×</span>
+        <input type="number" id="p2Dia" value="0" step="0.5" inputmode="decimal" oninput="calculate()">
+        <span class="unit-text">mm</span>
+      </div>
+    </div>
+
+    <div class="sub-calc-text">
+      <span>单卡钳有效受压面积: <b id="singleAreaDisplay" style="color: var(--caliper-accent);">-- mm²</b></span>
+      <span>下泵总有效面积: <b id="totalAreaDisplay" style="color: var(--caliper-accent);">-- mm²</b></span>
+    </div>
+  </div>
+
+  <!-- 3. 计算评估结果 -->
+  <div class="card result-card">
+    <div class="card-title" style="color: #cbd5e1;">
+      <span>3. 匹配结果与手感评估</span>
+      <span id="ratioTag" class="status-badge" style="background: #374151;">评估中</span>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-box">
+        <div class="metric-name">总液压比 (Hydraulic Ratio)</div>
+        <div class="metric-val" id="hydraulicRatioDisplay">0.0 : 1</div>
+        <div style="font-size: 11px; color: var(--text-sub);">下泵总有效面积 ÷ 上泵截面积</div>
+      </div>
+      <div class="metric-box">
+        <div class="metric-name">手感预测特征</div>
+        <div class="metric-val" id="feelDisplay" style="font-size: 16px; color: #f8fafc;">--</div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: 4px;" id="feelDetail">--</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 指导说明 -->
+  <div class="card guide-card">
+    <div class="card-title" style="color: #94a3b8;">
+      💡 指导说明：如何快速确认自己车辆的数据？
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-title">1. 如何辨识上泵活塞直径？</div>
+      <p>• <b>泵体打标：</b> 原厂泵底部通常铸刻有数字，如 <span class="guide-code">11</span>、<span class="guide-code">14</span>、<span class="guide-code">1/2 (12.7mm)</span> 等。</p>
+      <p>• <b>改装泵名称：</b> 如 7NB 15、RCS 15 即为 15mm 活塞；若标注 <span class="guide-code">16/20</span>，前面数字 16 为直径，20 为力臂。</p>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-title">2. 常见卡钳活塞规格参考</div>
+      <div class="pill-group">
+        <span class="pill">瑞祖玛 M313/M303: 4×32mm</span>
+        <span class="pill">SMRT TX1: 4×32mm</span>
+        <span class="pill">明浙 M22: 4×32mm</span>
+        <span class="pill">西互 J.JUAN: 4×30mm</span>
+        <span class="pill">车力屋 FR6: 2×30mm + 2×34mm</span>
+        <span class="pill">Brembo M50: 4×30mm</span>
+        <span class="pill">水鸟对四: 4×32mm</span>
+      </div>
+    </div>
+
+    <div class="guide-section">
+      <div class="guide-title">3. 液压比与推荐手感区间</div>
+      <p>• <b>&lt; 6.5 : 1（严重偏小）：</b> 手感极硬（“扳砖感”），刹车行程短但捏力极大才能刹住。</p>
+      <p>• <b>6.5 ~ 9.0 : 1（偏硬）：</b> 撞墙感强，行程短，适合赛道激烈重刹。</p>
+      <p>• <b>9.0 ~ 13.0 : 1（黄金推荐区间）：</b> 行程适中，线性度高，日常走街与山路控车兼备。</p>
+      <p>• <b>&gt; 13.0 : 1（偏软）：</b> 拉杆行程变长，极易捏到打手把，需注意排气干净度。</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CALIPER_PRESETS = {
+    'single-32-32':     { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'single-tx1':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'single-m22':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'single-ugr':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'single-juan':      { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
+    'single-fr6':       { calipers: 1, type: 'opposed', p1Count: 2, p1Dia: 30, p2Count: 2, p2Dia: 34 },
+    'single-fcc100':    { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
+    'single-fcf100s':   { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'single-m50':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
+    'single-waterbird': { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'single-gp4':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'dual-30-30':       { calipers: 2, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
+    'dual-32-32':       { calipers: 2, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'dual-30-34':       { calipers: 2, type: 'opposed', p1Count: 2, p1Dia: 30, p2Count: 2, p2Dia: 34 },
+    'single-rear-34':   { calipers: 1, type: 'opposed', p1Count: 2, p1Dia: 34, p2Count: 0, p2Dia: 0 },
+    'single-pin-27':    { calipers: 1, type: 'floating', p1Count: 1, p1Dia: 27, p2Count: 0, p2Dia: 0 },
+    'single-pin-34':    { calipers: 1, type: 'floating', p1Count: 1, p1Dia: 34, p2Count: 0, p2Dia: 0 },
+    'single-pin-2x25':  { calipers: 1, type: 'floating', p1Count: 2, p1Dia: 25, p2Count: 0, p2Dia: 0 }
+  };
+
+  function onMcSelectChange() {
+    const val = document.getElementById('mcSelect').value;
+    const diaInput = document.getElementById('mcDiameter');
+    if (val !== 'custom') {
+      diaInput.value = val;
+    }
+    calculate();
+  }
+
+  function onCaliperSelectChange() {
+    const val = document.getElementById('caliperSelect').value;
+    if (val === 'custom') return;
+
+    const data = CALIPER_PRESETS[val];
+    if (!data) return;
+
+    document.getElementById('caliperCount').value = data.calipers;
+    document.getElementById('caliperStructure').value = data.type;
+    document.getElementById('p1Count').value = data.p1Count;
+    document.getElementById('p1Dia').value = data.p1Dia;
+    document.getElementById('p2Count').value = data.p2Count;
+    document.getElementById('p2Dia').value = data.p2Dia;
+
+    calculate();
+  }
+
+  function calculateCircleArea(dia) {
+    if (!dia || dia <= 0) return 0;
+    return Math.PI * Math.pow(dia / 2, 2);
+  }
+
+  function calculate() {
+    // 1. 上泵截面积
+    const mcDia = parseFloat(document.getElementById('mcDiameter').value) || 0;
+    const mcArea = calculateCircleArea(mcDia);
+    document.getElementById('mcAreaDisplay').innerText = mcArea.toFixed(1) + ' mm²';
+
+    // 2. 下泵活塞截面积
+    const calipers = parseInt(document.getElementById('caliperCount').value) || 1;
+    const type = document.getElementById('caliperStructure').value;
+    const p1Count = parseInt(document.getElementById('p1Count').value) || 0;
+    const p1Dia = parseFloat(document.getElementById('p1Dia').value) || 0;
+    const p2Count = parseInt(document.getElementById('p2Count').value) || 0;
+    const p2Dia = parseFloat(document.getElementById('p2Dia').value) || 0;
+
+    const totalRawSingle = (p1Count * calculateCircleArea(p1Dia)) + (p2Count * calculateCircleArea(p2Dia));
+    const effectiveSingleArea = (type === 'opposed') ? (totalRawSingle / 2) : totalRawSingle;
+    const totalCaliperArea = effectiveSingleArea * calipers;
+
+    document.getElementById('singleAreaDisplay').innerText = effectiveSingleArea.toFixed(1) + ' mm²';
+    document.getElementById('totalAreaDisplay').innerText = totalCaliperArea.toFixed(1) + ' mm²';
+
+    // 3. 计算液压比与状态
+    if (mcArea <= 0 || totalCaliperArea <= 0) {
+      document.getElementById('hydraulicRatioDisplay').innerText = '--';
+      return;
+    }
+
+    const ratio = totalCaliperArea / mcArea;
+    document.getElementById('hydraulicRatioDisplay').innerText = ratio.toFixed(2) + ' : 1';
+
+    const ratioTag = document.getElementById('ratioTag');
+    const feelDisplay = document.getElementById('feelDisplay');
+    const feelDetail = document.getElementById('feelDetail');
+
+    if (ratio < 6.5) {
+      ratioTag.innerText = '严重偏小 (极硬)';
+      ratioTag.style.background = 'var(--tag-danger)';
+      feelDisplay.innerText = '死硬 / 扳砖手感';
+      feelDetail.innerText = '行程极短，刹车费劲且夹紧力不足，不建议这样搭配。';
+    } else if (ratio < 9.0) {
+      ratioTag.innerText = '偏小 (偏硬)';
+      ratioTag.style.background = 'var(--tag-warn)';
+      feelDisplay.innerText = '撞墙感强 / 偏硬';
+      feelDetail.innerText = '行程短而直接，制动随叫随到，偏赛道与激烈操控风格。';
+    } else if (ratio <= 13.0) {
+      ratioTag.innerText = '黄金区间 (推荐)';
+      ratioTag.style.background = 'var(--tag-good)';
+      feelDisplay.innerText = '适中 / 线性细腻';
+      feelDetail.innerText = '跑车与主流街车推荐配置，行程饱满，循迹控车最舒适。';
+    } else if (ratio <= 16.0) {
+      ratioTag.innerText = '偏大 (偏软)';
+      ratioTag.style.background = 'var(--tag-warn)';
+      feelDisplay.innerText = '省力 / 行程偏长';
+      feelDetail.innerText = '轻轻用力即有较大夹紧力，但拉杆行程明显变长。';
+    } else {
+      ratioTag.innerText = '严重偏大 (过软)';
+      ratioTag.style.background = 'var(--tag-danger)';
+      feelDisplay.innerText = '虚软 / 容易打手把';
+      feelDetail.innerText = '上泵推油量不足，拉杆容易触底，有安全隐患。';
+    }
+  }
+
+  // 初始化
+  calculate();
+</script>
+</body>
+</html>
