@@ -1,28 +1,24 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <!-- 核心：禁止非预期缩放，适配全面屏/刘海屏安全区 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="format-detection" content="telephone=no">
-  <title>赛道级 制动液压比科学匹配与测算工具</title>
+  <title>制动液压比科学匹配与测算工具</title>
   <style>
     :root {
       --bg-color: #0b0d11;
       --card-bg: rgba(18, 22, 31, 0.94);
       --card-border: #222938;
       
-      /* 上泵专属色系（科技青蓝） */
       --mc-accent: #00e5ff;
       --mc-border: rgba(0, 229, 255, 0.35);
       --mc-glow: rgba(0, 229, 255, 0.12);
       
-      /* 下泵专属色系（赛车烈焰橙红） */
       --caliper-accent: #ff4d00;
       --caliper-border: rgba(255, 77, 0, 0.35);
       --caliper-glow: rgba(255, 77, 0, 0.12);
       
-      /* 状态与文本 */
       --text-main: #f8fafc;
       --text-muted: #94a3b8;
       --text-sub: #64748b;
@@ -40,7 +36,6 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    /* 核心修复：防止系统字号缩放策略破坏页面布局 */
     html {
       -webkit-text-size-adjust: 100%;
       text-size-adjust: 100%;
@@ -57,7 +52,6 @@
       display: flex;
       justify-content: center;
       padding: 16px 12px;
-      /* 适配 iPhone/安卓底部虚拟按键与小黑条安全区 */
       padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
       min-height: 100vh;
       width: 100%;
@@ -101,7 +95,6 @@
       width: 100%;
     }
 
-    /* 上泵区块 */
     .card-mc {
       border-color: var(--mc-border);
       box-shadow: 0 4px 20px -2px var(--mc-glow);
@@ -112,7 +105,6 @@
       padding-left: 8px;
     }
 
-    /* 下泵区块 */
     .card-caliper {
       border-color: var(--caliper-border);
       box-shadow: 0 4px 20px -2px var(--caliper-glow);
@@ -146,7 +138,6 @@
       margin-bottom: 5px;
     }
 
-    /* 移动端核心关键：input与select在移动设备上设置16px，杜绝聚焦自动缩放放大页面 */
     select, input {
       width: 100%;
       background-color: var(--input-bg);
@@ -161,7 +152,6 @@
       appearance: none;
     }
 
-    /* 下拉选择框右侧小箭头图标 */
     select {
       background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2394a3b8' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
@@ -207,7 +197,6 @@
       border: 1px solid rgba(255, 255, 255, 0.04);
     }
 
-    /* 评估结果区块 */
     .result-card {
       background: linear-gradient(135deg, #131722 0%, #0d0f15 100%);
       border: 1px solid #2d3748;
@@ -251,7 +240,6 @@
       white-space: nowrap;
     }
 
-    /* 指导说明 */
     .guide-card {
       background-color: #10131a;
       font-size: 12px;
@@ -297,26 +285,13 @@
       border: 1px solid #283347;
     }
 
-    /* 移动端专属响应式优化断点 */
     @media (max-width: 480px) {
-      body {
-        padding: 10px 8px;
-      }
-      .card {
-        padding: 12px;
-      }
-      header h1 {
-        font-size: 18px;
-      }
-      .metrics-grid {
-        grid-template-columns: 1fr; /* 小屏切换为单列堆叠，防止数字文字被挤爆 */
-      }
-      .metric-val {
-        font-size: 22px;
-      }
-      .sub-calc-text {
-        flex-direction: column;
-      }
+      body { padding: 10px 8px; }
+      .card { padding: 12px; }
+      header h1 { font-size: 18px; }
+      .metrics-grid { grid-template-columns: 1fr; }
+      .metric-val { font-size: 22px; }
+      .sub-calc-text { flex-direction: column; }
     }
   </style>
 </head>
@@ -328,47 +303,54 @@
     <p>科学换算杠杆比率 · 预知刹车手感与行程</p>
   </header>
 
-  <!-- 1. 上泵设置 (青蓝色调) -->
+  <!-- 1. 上泵设置 (以直径尺寸为视觉核心，丰富车力屋及各大厂代表型号) -->
   <div class="card card-mc">
     <div class="card-title">
       <span>1. 上泵主缸设置 (Master Cylinder)</span>
     </div>
 
     <div class="form-group">
-      <label>选择常见品牌型号（自选放首行）</label>
+      <label>选择常见型号规格（自选置顶，主要对照活塞直径）</label>
       <select id="mcSelect" onchange="onMcSelectChange()">
+        <!-- 自选置顶 -->
         <option value="custom" selected>-- [自选] 手动输入活塞直径 --</option>
         
-        <optgroup label="改装直推大厂 (图1收录品牌)">
-          <option value="14">伟凡 / SMRT / FJN / 明浙 直推 (14mm)</option>
-          <option value="15">伟凡 / SMRT / PT / UGR 直推 (15mm)</option>
-          <option value="16">风速 / PT / 明浙 直推 (16mm)</option>
-          <option value="17.5">瑞祖玛 / 明浙 / 盖尔斯彼得 直推 (17.5mm)</option>
-          <option value="19">风速 / UGR / 瑞祖玛 大直推 (19mm)</option>
-        </optgroup>
-
-        <optgroup label="车力屋 Frando">
-          <option value="14">车力屋 7NB / 9NB 直推 (14mm)</option>
-          <option value="15">车力屋 7NB / 9NB 直推 (15mm)</option>
-          <option value="17">车力屋 7NB / 9NB 直推 (17mm)</option>
-          <option value="19">车力屋 7NB / 9NB 直推 (19mm)</option>
-          <option value="12.7">车力屋 F101 侧推 (12.7mm - 1/2")</option>
-        </optgroup>
-
+        <!-- 顶级品牌: 布雷博 Brembo (置顶) -->
         <optgroup label="布雷博 Brembo">
-          <option value="14">Brembo 14 RCS 直推 (14mm)</option>
-          <option value="15">Brembo 15 RCS / Corsa Corta (15mm)</option>
-          <option value="16">Brembo 16 RCS 直推 (16mm)</option>
-          <option value="17">Brembo 17 RCS 直推 (17mm)</option>
-          <option value="19">Brembo 19 RCS / RCS CC (19mm)</option>
-          <option value="11">Brembo PS11 侧推 (11mm)</option>
-          <option value="13">Brembo PS13 侧推 (13mm)</option>
+          <option value="14">14mm - Brembo 14 RCS 直推</option>
+          <option value="15">15mm - Brembo 15 RCS / Corsa Corta 直推</option>
+          <option value="16">16mm - Brembo 16 RCS 直推</option>
+          <option value="17">17mm - Brembo 17 RCS 直推</option>
+          <option value="19">19mm - Brembo 19 RCS / RCS CC 直推</option>
+          <option value="11">11mm - Brembo PS11 侧推</option>
+          <option value="13">13mm - Brembo PS13 侧推</option>
         </optgroup>
 
-        <optgroup label="原厂踏板 / 常用侧推 (图1收录)">
-          <option value="11">九号 E300P / 弯道情人 原厂侧推 (11mm)</option>
-          <option value="12.7">日清 / 常见原厂大侧推 (12.7mm - 1/2")</option>
-          <option value="14">日系街车原厂侧推 (14mm - 9/16")</option>
+        <!-- 车力屋 Frando：按各型号典型尺寸分散配置，避免单调重复 -->
+        <optgroup label="车力屋 Frando (主流热销型号)">
+          <option value="14">14mm - Frando 7NB 直推 (入门轻量/小单碟)</option>
+          <option value="15">15mm - Frando F130 锻造直推 (主流单碟进阶)</option>
+          <option value="16">16mm - Frando FMC-630 CNC直推 (中大单碟/双碟)</option>
+          <option value="17">17mm - Frando F101 高阶直推 (运动街车/手感饱满)</option>
+          <option value="19">19mm - Frando 9NB 锻造大直推 (大双碟竞技)</option>
+          <option value="12.7">12.7mm (1/2") - Frando 侧推泵</option>
+        </optgroup>
+
+        <!-- 热门改装品牌 (图1收录) -->
+        <optgroup label="瑞祖玛 / SMRT / PT / UGR / 明浙 / FJN / 伟凡 / 风速">
+          <option value="14">14mm - 伟凡 / SMRT / FJN / 明浙 直推</option>
+          <option value="15">15mm - 伟凡 / SMRT / PT / UGR 直推</option>
+          <option value="16">16mm - 风速 / PT / 明浙 直推</option>
+          <option value="17.5">17.5mm - 瑞祖玛 / 明浙 直推</option>
+          <option value="19">19mm - 风速 / UGR / 瑞祖玛 直推</option>
+        </optgroup>
+
+        <!-- 原厂/配套独立单列 -->
+        <optgroup label="原厂配套车型">
+          <option value="11">11mm - 九号 E300P 原厂侧推</option>
+          <option value="11">11mm - 光阳 弯道情人 原厂侧推</option>
+          <option value="12.7">12.7mm (1/2") - 日系大踏板原厂侧推</option>
+          <option value="14">14mm (9/16") - 原厂街车大侧推</option>
         </optgroup>
       </select>
     </div>
@@ -386,42 +368,41 @@
     </div>
   </div>
 
-  <!-- 2. 下泵设置 (烈焰橙调) -->
+  <!-- 2. 下泵设置 (单类目内严格按尺寸从小到大升序排) -->
   <div class="card card-caliper">
     <div class="card-title">
       <span>2. 卡钳下泵设置 (Caliper)</span>
     </div>
 
     <div class="form-group">
-      <label>选择常见卡钳型号（自选放首行）</label>
+      <label>选择常见卡钳型号（自选放首行，单类目内从小到大排列）</label>
       <select id="caliperSelect" onchange="onCaliperSelectChange()">
+        <!-- 自选置顶 -->
         <option value="custom" selected>-- [自选] 手动输入卡钳活塞参数 --</option>
         
-        <optgroup label="图2收录热销竞技卡钳 (单碟/踏板常用)">
-          <option value="single-32-32">瑞祖玛 M313 / M303 大辐射 (4×32mm)</option>
-          <option value="single-tx1">SMRT TX1 竞技大辐射 (4×32mm)</option>
-          <option value="single-m22">明浙 M22 赛道版大辐射 (4×32mm)</option>
-          <option value="single-ugr">UGR 赛道大辐射 (4×32mm)</option>
-          <option value="single-juan">西互 J.JUAN 辐射对四 (4×30mm)</option>
-          <option value="single-fr6">车力屋 FR6 异径大辐射 (2×30mm + 2×34mm)</option>
-          <option value="single-fcc100">车力屋 FCC100 CNC辐射 (4×30mm)</option>
-          <option value="single-fcf100s">车力屋 FCF100S 锻造辐射 (4×32mm)</option>
-          <option value="single-m50">布雷博 M50 / Stylema (4×30mm)</option>
-          <option value="single-waterbird">布雷博 水鸟原厂对四 (4×32mm)</option>
-          <option value="single-gp4">布雷博 GP4-RX / GP4-MS 赛道对四 (4×32mm)</option>
+        <!-- 单卡钳类别：按受压活塞尺寸升序 -->
+        <optgroup label="单卡钳 (单碟 / 踏板升级，尺寸从小到大)">
+          <option value="single-pin-27">27mm - 原厂浮动单活塞</option>
+          <option value="single-juan">4×30mm - 西互 J.JUAN 辐射对四</option>
+          <option value="single-fcc100">4×30mm - 车力屋 FCC100 锻造辐射</option>
+          <option value="single-m50">4×30mm - 布雷博 M50 / Stylema 旗舰辐射</option>
+          <option value="single-32-32">4×32mm - 瑞祖玛 M313 / M303 大辐射</option>
+          <option value="single-tx1">4×32mm - SMRT TX1 竞技大辐射</option>
+          <option value="single-m22">4×32mm - 明浙 M22 赛道版大辐射</option>
+          <option value="single-ugr">4×32mm - UGR 赛道大辐射</option>
+          <option value="single-fcf100s">4×32mm - 车力屋 FCF100S 辐射对四</option>
+          <option value="single-waterbird">4×32mm - 布雷博 水鸟原厂对四</option>
+          <option value="single-gp4">4×32mm - 布雷博 GP4 赛道旗舰对四</option>
+          <option value="single-fr6">2×30mm + 2×34mm - 车力屋 FR6 异径大辐射</option>
+          <option value="single-rear-34">2×34mm - 布雷博/车力屋 大小螃蟹对二</option>
+          <option value="single-pin-34">34mm - 原厂浮动单活塞</option>
         </optgroup>
 
-        <optgroup label="前双碟大排量车款 (双卡钳)">
-          <option value="dual-30-30">双碟对四 30mm/30mm (如 双M50 / 双FCC100)</option>
-          <option value="dual-32-32">双碟对四 32mm/32mm (如 双水鸟 / 双GP4 / 双M313)</option>
-          <option value="dual-30-34">双碟对四 30mm/34mm (如 双FR6 / 双GP4-RB)</option>
-        </optgroup>
-
-        <optgroup label="后卡钳 / 常见原厂单向卡钳">
-          <option value="single-rear-34">大/小螃蟹对二卡钳 (2×34mm)</option>
-          <option value="single-pin-27">原厂浮动单活塞 27mm</option>
-          <option value="single-pin-34">原厂浮动单活塞 34mm</option>
-          <option value="single-pin-2x25">原厂浮动双活塞 (2×25mm)</option>
+        <!-- 双卡钳类别：按受压活塞尺寸升序 -->
+        <optgroup label="双卡钳 (前双碟，尺寸从小到大)">
+          <option value="dual-30-30">双碟 4×30mm - 双M50 / 双FCC100</option>
+          <option value="dual-32-32">双碟 4×32mm - 双水鸟 / 双GP4 / 双M313</option>
+          <option value="dual-30-34">双碟 2×30+2×34mm - 双FR6 / 双GP4-RB</option>
         </optgroup>
       </select>
     </div>
@@ -437,8 +418,8 @@
     <div class="form-group">
       <label>卡钳结构形式</label>
       <select id="caliperStructure" onchange="calculate()">
-        <option value="opposed" selected>对向活塞卡钳 (取单侧受力活塞面积)</option>
-        <option value="floating">单向浮动卡钳 (所有活塞均直接推片)</option>
+        <option value="opposed" selected>对向活塞卡钳 (如辐射对四/对二螃蟹，取单侧受力活塞面积)</option>
+        <option value="floating">单向浮动卡钳 (原厂单/双活塞，所有活塞均直接推片)</option>
       </select>
     </div>
 
@@ -498,52 +479,51 @@
     <div class="guide-section">
       <div class="guide-title">1. 如何辨识上泵活塞直径？</div>
       <p>• <b>泵体打标：</b> 原厂泵底部通常铸刻有数字，如 <span class="guide-code">11</span>、<span class="guide-code">14</span>、<span class="guide-code">1/2 (12.7mm)</span> 等。</p>
-      <p>• <b>改装泵名称：</b> 如 7NB 15、RCS 15 即为 15mm 活塞；若标注 <span class="guide-code">16/20</span>，前面数字 16 为直径，20 为力臂。</p>
+      <p>• <b>改装泵名称：</b> 如 7NB 14、F130 15、RCS 15 即为对应活塞直径；若标注 <span class="guide-code">16/20</span>，前面数字 16 为活塞直径，20 为力臂。</p>
     </div>
 
     <div class="guide-section">
       <div class="guide-title">2. 常见卡钳活塞规格参考</div>
       <div class="pill-group">
-        <span class="pill">瑞祖玛 M313/M303: 4×32mm</span>
+        <span class="pill">Brembo M50: 4×30mm</span>
+        <span class="pill">西互 J.JUAN: 4×30mm</span>
+        <span class="pill">瑞祖玛 M313: 4×32mm</span>
         <span class="pill">SMRT TX1: 4×32mm</span>
         <span class="pill">明浙 M22: 4×32mm</span>
-        <span class="pill">西互 J.JUAN: 4×30mm</span>
-        <span class="pill">车力屋 FR6: 2×30mm + 2×34mm</span>
-        <span class="pill">Brembo M50: 4×30mm</span>
         <span class="pill">水鸟对四: 4×32mm</span>
+        <span class="pill">车力屋 FR6: 2×30mm + 2×34mm</span>
       </div>
     </div>
 
     <div class="guide-section">
       <div class="guide-title">3. 液压比与推荐手感区间</div>
-      <p>• <b>&lt; 6.5 : 1（严重偏小）：</b> 手感极硬（“扳砖感”），刹车行程短但捏力极大才能刹住。</p>
-      <p>• <b>6.5 ~ 9.0 : 1（偏硬）：</b> 撞墙感强，行程短，适合赛道激烈重刹。</p>
-      <p>• <b>9.0 ~ 13.0 : 1（黄金推荐区间）：</b> 行程适中，线性度高，日常走街与山路控车兼备。</p>
-      <p>• <b>&gt; 13.0 : 1（偏软）：</b> 拉杆行程变长，极易捏到打手把，需注意排气干净度。</p>
+      <p>• <b>&lt; 6.5 : 1（严重偏小）：</b> 手感极硬（“扳砖感”），刹车行程短但捏力极大才能刹住[cite: 1, 2, 3]。</p>
+      <p>• <b>6.5 ~ 9.0 : 1（偏硬）：</b> 撞墙感强，行程短，适合赛道激烈重刹[cite: 2, 3]。</p>
+      <p>• <b>9.0 ~ 13.0 : 1（黄金推荐区间）：</b> 行程适中，线性度高，日常走街与山路控车兼备[cite: 2, 3]。</p>
+      <p>• <b>&gt; 13.0 : 1（偏软）：</b> 拉杆行程变长，极易捏到打手把，需注意排气干净度[cite: 2, 3]。</p>
     </div>
   </div>
 </div>
 
 <script>
   const CALIPER_PRESETS = {
+    'single-pin-27':    { calipers: 1, type: 'floating', p1Count: 1, p1Dia: 27, p2Count: 0, p2Dia: 0 },
+    'single-juan':      { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
+    'single-fcc100':    { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
+    'single-m50':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
     'single-32-32':     { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
     'single-tx1':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
     'single-m22':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
     'single-ugr':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
-    'single-juan':      { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
-    'single-fr6':       { calipers: 1, type: 'opposed', p1Count: 2, p1Dia: 30, p2Count: 2, p2Dia: 34 },
-    'single-fcc100':    { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
     'single-fcf100s':   { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
-    'single-m50':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
     'single-waterbird': { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
     'single-gp4':       { calipers: 1, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
+    'single-fr6':       { calipers: 1, type: 'opposed', p1Count: 2, p1Dia: 30, p2Count: 2, p2Dia: 34 },
+    'single-rear-34':   { calipers: 1, type: 'opposed', p1Count: 2, p1Dia: 34, p2Count: 0, p2Dia: 0 },
+    'single-pin-34':    { calipers: 1, type: 'floating', p1Count: 1, p1Dia: 34, p2Count: 0, p2Dia: 0 },
     'dual-30-30':       { calipers: 2, type: 'opposed', p1Count: 4, p1Dia: 30, p2Count: 0, p2Dia: 0 },
     'dual-32-32':       { calipers: 2, type: 'opposed', p1Count: 4, p1Dia: 32, p2Count: 0, p2Dia: 0 },
-    'dual-30-34':       { calipers: 2, type: 'opposed', p1Count: 2, p1Dia: 30, p2Count: 2, p2Dia: 34 },
-    'single-rear-34':   { calipers: 1, type: 'opposed', p1Count: 2, p1Dia: 34, p2Count: 0, p2Dia: 0 },
-    'single-pin-27':    { calipers: 1, type: 'floating', p1Count: 1, p1Dia: 27, p2Count: 0, p2Dia: 0 },
-    'single-pin-34':    { calipers: 1, type: 'floating', p1Count: 1, p1Dia: 34, p2Count: 0, p2Dia: 0 },
-    'single-pin-2x25':  { calipers: 1, type: 'floating', p1Count: 2, p1Dia: 25, p2Count: 0, p2Dia: 0 }
+    'dual-30-34':       { calipers: 2, type: 'opposed', p1Count: 2, p1Dia: 30, p2Count: 2, p2Dia: 34 }
   };
 
   function onMcSelectChange() {
@@ -578,12 +558,10 @@
   }
 
   function calculate() {
-    // 1. 上泵截面积
     const mcDia = parseFloat(document.getElementById('mcDiameter').value) || 0;
     const mcArea = calculateCircleArea(mcDia);
     document.getElementById('mcAreaDisplay').innerText = mcArea.toFixed(1) + ' mm²';
 
-    // 2. 下泵活塞截面积
     const calipers = parseInt(document.getElementById('caliperCount').value) || 1;
     const type = document.getElementById('caliperStructure').value;
     const p1Count = parseInt(document.getElementById('p1Count').value) || 0;
@@ -598,7 +576,6 @@
     document.getElementById('singleAreaDisplay').innerText = effectiveSingleArea.toFixed(1) + ' mm²';
     document.getElementById('totalAreaDisplay').innerText = totalCaliperArea.toFixed(1) + ' mm²';
 
-    // 3. 计算液压比与状态
     if (mcArea <= 0 || totalCaliperArea <= 0) {
       document.getElementById('hydraulicRatioDisplay').innerText = '--';
       return;
@@ -639,7 +616,6 @@
     }
   }
 
-  // 初始化
   calculate();
 </script>
 </body>
